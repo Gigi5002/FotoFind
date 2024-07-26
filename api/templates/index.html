@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Поиск товаров</title>
+    <style>
+        body {
+            background-color: #e0f7fa; /* Светло-зеленый цвет фона */
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .product {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .product img {
+            max-width: 150px;
+            margin-right: 20px;
+        }
+        .product div {
+            flex-grow: 1;
+        }
+        #results p {
+            font-size: 18px;
+            color: #ff0000; /* Красный цвет для сообщений */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Поиск товаров</h1>
+        <form id="searchForm" enctype="multipart/form-data">
+            <input type="file" name="image" required>
+            <button type="submit">Поиск</button>
+        </form>
+        <div id="results"></div>
+    </div>
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            try {
+                const response = await fetch('/api/search/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const data = await response.json();
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '';
+
+                if (data.products.length === 0) {
+                    resultsDiv.innerHTML = '<p>Подобных товаров не найдено.</p>';
+                } else {
+                    data.products.forEach(product => {
+                        const productDiv = document.createElement('div');
+                        productDiv.className = 'product';
+                        productDiv.innerHTML = `
+                            <img src="${product.image}" alt="${product.name}">
+                            <div>
+                                <h2>${product.name}</h2>
+                                <p>${product.description}</p>
+                            </div>
+                        `;
+                        resultsDiv.appendChild(productDiv);
+                    });
+                }
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = '<p>Произошла ошибка при обработке вашего запроса.</p>';
+            }
+        });
+    </script>
+</body>
+</html>
